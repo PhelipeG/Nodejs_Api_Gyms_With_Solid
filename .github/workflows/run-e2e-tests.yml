@@ -1,0 +1,35 @@
+name: Run E2E Tests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Permite execução manual
+
+jobs:
+  run-e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: bitnami/postgresql
+        env:
+          POSTGRESQL_USERNAME: docker
+          POSTGRESQL_PASSWORD: docker
+          POSTGRESQL_DATABASE: ignitenode03
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - run: npm cache clean --force
+      - run: npm ci || npm install
+      - run: npm run test:e2e
+        env:
+          DATABASE_URL: postgres://docker:docker@localhost:5432/ignitenode03
