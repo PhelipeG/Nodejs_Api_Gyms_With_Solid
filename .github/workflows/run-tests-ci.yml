@@ -19,4 +19,4 @@ jobs:
 
       - run: npm ci || npm install
 
-      - run: npm run test:unitary
+      - run: npm run test
