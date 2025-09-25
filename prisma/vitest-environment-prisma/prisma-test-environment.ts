@@ -1,43 +1,48 @@
-import 'dotenv/config'
+import { randomUUID } from "node:crypto";
+import { execSync } from "node:child_process";
+import { Environment } from "vitest/environments";
+import { PrismaClient } from "@prisma/client";
 
-import { randomUUID } from 'node:crypto'
-import { execSync } from 'node:child_process'
-import { Environment } from 'vitest/environments'
-import { PrismaClient } from '@prisma/client'
+import "dotenv/config";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 function generateDatabaseURL(schema: string) {
   if (!process.env.DATABASE_URL) {
-    throw new Error('Please provide a DATABASE_URL environment variable.')
+    throw new Error("Please provide a DATABASE_URL environment variable.");
   }
 
-  const url = new URL(process.env.DATABASE_URL)
+  const url = new URL(process.env.DATABASE_URL);
 
-  url.searchParams.set('schema', schema)
+  url.searchParams.set("schema", schema);
 
-  return url.toString()
+  return url.toString();
 }
 
-export default <Environment><unknown>{
-  name: 'prisma',
-  transformMode: 'ssr',
+export default <Environment>(<unknown>{
+  name: "prisma",
+  transformMode: "ssr",
   async setup() {
-    const schema = randomUUID()
-    const databaseURL = generateDatabaseURL(schema)
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        "DATABASE_URL not found. Make sure your .env file exists and contains DATABASE_URL."
+      );
+    }
+    const schema = randomUUID();
+    const databaseURL = generateDatabaseURL(schema);
 
-    process.env.DATABASE_URL = databaseURL
+    process.env.DATABASE_URL = databaseURL;
 
-    execSync('npx prisma db push')
+    execSync("npx prisma db push");
 
     return {
       async teardown() {
         await prisma.$executeRawUnsafe(
           `DROP SCHEMA IF EXISTS "${schema}" CASCADE`
-        )
+        );
 
-        await prisma.$disconnect()
+        await prisma.$disconnect();
       },
-    }
+    };
   },
-}
+});
