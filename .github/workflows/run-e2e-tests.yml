@@ -30,6 +30,9 @@ jobs:
 
       - run: npm cache clean --force
       - run: npm ci || npm install
+      - run: npm link ./prisma/vitest-environment-prisma
+      - run: npm link vitest-environment-prisma
       - run: npm run test:e2e
         env:
+          JWT_SECRET: my_secret_key
           DATABASE_URL: postgres://docker:docker@localhost:5432/ignitenode03
